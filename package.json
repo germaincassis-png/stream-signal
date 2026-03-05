@@ -1,7 +1,12 @@
 {
   "name": "streamsignal",
   "version": "1.0.0",
+  "description": "AI-powered weekly newsletter",
+  "main": "scripts/generate.js",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
