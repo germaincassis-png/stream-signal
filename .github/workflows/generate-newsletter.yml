@@ -1,0 +1,23 @@
+name: Generate StreamSignal Newsletter
+on:
+  workflow_dispatch:
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Show files
+        run: ls -la
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install
+      - run: node scripts/generate.js
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      - run: |
+          git config --global user.name "StreamSignal Bot"
+          git config --global user.email "bot@streamsignal.io"
+          git add -A
+          git diff --staged --quiet || git commit -m "Newsletter update"
+          git push
