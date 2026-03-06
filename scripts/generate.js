@@ -223,12 +223,17 @@ async function main() {
     .map(b => b.type === "text" ? b.text : "")
     .filter(Boolean).join("\n");
 
-  const cleaned = fullText.replace(/```json|```/g, "").trim();
   const jsonStart = cleaned.indexOf("{");
   const jsonEnd = cleaned.lastIndexOf("}");
   if (jsonStart === -1) throw new Error("No JSON in response");
 
-  const data = JSON.parse(cleaned.slice(jsonStart, jsonEnd + 1));
+  let jsonStr = cleaned.slice(jsonStart, jsonEnd + 1);
+  // Fix common JSON issues from AI output
+  jsonStr = jsonStr.replace(/[\u0000-\u001F\u007F-\u009F]/g, " "); // remove control chars
+  jsonStr = jsonStr.replace(/,\s*}/g, "}"); // remove trailing commas in objects
+  jsonStr = jsonStr.replace(/,\s*]/g, "]"); // remove trailing commas in arrays
+
+  const data = JSON.parse(jsonStr);
   data.issue_number = String(issueNum);
 
   // Write current issue to index.html
