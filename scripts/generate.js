@@ -227,11 +227,26 @@ async function main() {
   const jsonEnd = cleaned.lastIndexOf("}");
   if (jsonStart === -1) throw new Error("No JSON in response");
 
-  let jsonStr = cleaned.slice(jsonStart, jsonEnd + 1);
-  // Fix common JSON issues from AI output
-  jsonStr = jsonStr.replace(/[\u0000-\u001F\u007F-\u009F]/g, " "); // remove control chars
-  jsonStr = jsonStr.replace(/,\s*}/g, "}"); // remove trailing commas in objects
-  jsonStr = jsonStr.replace(/,\s*]/g, "]"); // remove trailing commas in arrays
+let jsonStr = cleaned.slice(jsonStart, jsonEnd + 1);
+  
+  // Remove control characters that break JSON parsing
+  jsonStr = jsonStr.replace(/[\u0000-\u001F\u007F-\u009F]/g, " ");
+  // Remove trailing commas
+  jsonStr = jsonStr.replace(/,(\s*[}\]])/g, "$1");
+  // Fix smart quotes
+  jsonStr = jsonStr.replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"');
+
+  let data;
+  try {
+    data = JSON.parse(jsonStr);
+  } catch(e) {
+    // Truncate stories array if it's malformed at the end
+    const storiesEnd = jsonStr.lastIndexOf('"watch_list"');
+    if (storiesEnd > 0) {
+      jsonStr = jsonStr.slice(0, storiesEnd) + '"watch_list": [], "weekly_stat": null}';
+    }
+    data = JSON.parse(jsonStr);
+  }
 
   const data = JSON.parse(jsonStr);
   data.issue_number = String(issueNum);
